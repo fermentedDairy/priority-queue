@@ -1,16 +1,15 @@
-package org.fermented.dairy.queues.priority.impl;
+package org.fermented.dairy.queues.priority;
 
-import org.fermented.dairy.queues.priority.DefaultPriorityQueue;
-import org.fermented.dairy.queues.priority.Priority;
-import org.fermented.dairy.queues.priority.PriorityQueue;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
- * Test for DefaultPriorityQueue implementation
+ * Test for DefaultPriorityQueue implementation.
  */
 class DefaultPriorityQueueTest {
 
@@ -107,7 +106,7 @@ class DefaultPriorityQueueTest {
 
     @DisplayName("when messages with priorities are put onto an empty queue and then peek should return next deilvered message")
     @Test
-    void whenMessagesWithPrioritiesArePutOntoAnEmptyQueueAndThenPeekShouldReturnUrgentMessage(){
+    void whenMessagesWithPrioritiesArePutOntoAnEmptyQueueAndThenPeekShouldReturnUrgentMessage() {
         final TestMessage lowestMessage = new TestMessage(1, "message lowest");
         final TestMessage lowMessage = new TestMessage(2, "message low");
         final TestMessage mediumMessage = new TestMessage(3, "message medium");

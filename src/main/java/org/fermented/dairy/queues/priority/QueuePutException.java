@@ -1,22 +1,24 @@
 package org.fermented.dairy.queues.priority;
 
 /**
- * Exception thrown when queue put operation fails
+ * Runtime Exception thrown when queue put operation fails.
  */
-public class QueuePutException extends QueueException{
+public class QueuePutException extends QueueException {
 
     /**
-     * @param message Descriptive message
-     * @param causedBy Exception being wrapped
+     * see {@link QueueException#QueueException(Throwable, String, Object...)}.
      */
-    public QueuePutException(final String message, final Throwable causedBy){
-        super(message, causedBy);
+    public QueuePutException(final Throwable causedBy,
+                             final String message,
+                             final Object... params) {
+        super(String.format(message, params), causedBy);
     }
 
     /**
-     * @param message Descriptive message
+     * see {@link QueueException#QueueException(String, Object...)}.
      */
-    public QueuePutException(final String message){
-        super(message);
+    public QueuePutException(final String message,
+                             final Object... params) {
+        super(String.format(message, params));
     }
 }

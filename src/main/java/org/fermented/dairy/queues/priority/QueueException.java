@@ -1,22 +1,28 @@
 package org.fermented.dairy.queues.priority;
 
 /**
- * Parent exception for all exceptions thrown by the queue implementations
+ * Parent exception for all exceptions thrown by the queue implementations.
  */
-public class QueueException extends RuntimeException{
+public class QueueException extends RuntimeException {
 
     /**
-     * @param message Descriptive message
+     * Constructor with caused by throwable and formatted message.
+     *
      * @param causedBy Exception being wrapped
+     * @param message  Descriptive message {@link java.util.Formatter}
+     * @param params Parameters to be used when formatting the message
      */
-    public QueueException(final String message, final Throwable causedBy) {
-        super(message, causedBy);
+    public QueueException(final Throwable causedBy, final String message, final Object... params) {
+        super(String.format(message, params), causedBy);
     }
 
     /**
-     * @param message Descriptive message
+     * Constructor with formatted message.
+     *
+     * @param message Descriptive message {@link java.util.Formatter}
+     * @param params Parameters to be used when formatting the message
      */
-    public QueueException(final String message) {
-        super(message);
+    public QueueException(final String message, final Object... params) {
+        super(String.format(message, params));
     }
 }
