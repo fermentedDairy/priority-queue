@@ -12,11 +12,11 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
     String MAX_PUT_WAIT_TIME_PROPERTY = "maxPutWaitTime";
 
     static <T> DefaultPriorityQueueImpl<T> getQueue(){
-        return new DefaultPriorityQueueImpl<T>(Map.of());
+        return new DefaultPriorityQueueImpl<>(Map.of());
     }
 
     static <T> DefaultPriorityQueueImpl<T> getQueue(final Map<String, Object> properties){
-        return new DefaultPriorityQueueImpl<T>(properties);
+        return new DefaultPriorityQueueImpl<>(properties);
     }
 
     void offer(M message, P priority);
