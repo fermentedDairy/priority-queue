@@ -1,9 +1,13 @@
 package org.fermented.dairy.queues.priority;
 
+import static org.fermented.dairy.queues.priority.PriorityQueue.MAX_PUT_WAIT_TIME_PROPERTY;
+import static org.fermented.dairy.queues.priority.PriorityQueue.MAX_QUEUE_DEPTH_PROPERTY;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -138,5 +142,30 @@ class DefaultPriorityQueueTest {
                 () -> assertEquals(lowestMessage, defaultPriorityQueue.peek().get(), "lowest should be peeked last"),
                 () -> assertEquals(lowestMessage, defaultPriorityQueue.poll().get(), "lowest should be polled last")
         );
+    }
+
+    @DisplayName("when the queue is full then put throws after timeout")
+    @Test
+    void whenTheQueueIsFullThenPutThrowsAfterTimeout(){
+        defaultPriorityQueue = PriorityQueue.getQueue(
+                Map.of(
+                        MAX_PUT_WAIT_TIME_PROPERTY, 1000L,
+                        MAX_QUEUE_DEPTH_PROPERTY, 5L
+                        )
+        );
+
+        final TestMessage lowestMessage = new TestMessage(1, "message lowest");
+        final TestMessage lowMessage = new TestMessage(2, "message low");
+        final TestMessage mediumMessage = new TestMessage(3, "message medium");
+        final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
+        final TestMessage highMessage = new TestMessage(5, "message high");
+        final TestMessage urgentMessage = new TestMessage(6, "message urgent");
+        defaultPriorityQueue.offer(lowMessage, Priority.LOW);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
+        defaultPriorityQueue.offer(defaultPriority);
+        defaultPriorityQueue.offer(highMessage, Priority.HIGH);
+        final QueuePutException exception = assertThrows(QueuePutException.class, () -> defaultPriorityQueue.offer(urgentMessage, Priority.URGENT));
+        assertEquals("Put failed within timeout, max queue depth exceeded", exception.getMessage());
     }
 }
