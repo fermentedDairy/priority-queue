@@ -49,8 +49,8 @@ public class DefaultPriorityQueueTest {
         final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
         final TestMessage highMessage = new TestMessage(5, "message high");
         final TestMessage urgentMessage = new TestMessage(6, "message urgent");
-        defaultPriorityQueue.offer(lowMessage, Priority.LOWEST);
-        defaultPriorityQueue.offer(lowestMessage, Priority.LOW);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(lowMessage, Priority.LOW);
         defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
         defaultPriorityQueue.offer(defaultPriority);
         defaultPriorityQueue.offer(highMessage, Priority.HIGH);

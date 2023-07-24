@@ -74,7 +74,11 @@ public final class DefaultPriorityQueueImpl<M> implements DefaultPriorityQueue<M
     public Optional<M> poll(final long waitTimeout) {
         try
         {
-            if(waitTimeout != 0) pollLock.tryLock(waitTimeout, TimeUnit.MILLISECONDS);
+            if(waitTimeout == 0) {
+                pollLock.tryLock();
+            } else {
+                pollLock.tryLock(waitTimeout, TimeUnit.MILLISECONDS);
+            }
 
             return ORDERED_PRIORITIES.stream()
                     .filter(
@@ -84,7 +88,7 @@ public final class DefaultPriorityQueueImpl<M> implements DefaultPriorityQueue<M
         } catch (final InterruptedException e) {
             throw new QueuePutException("could not gain the lock on put within the timeout", e);
         } finally {
-            if(pollLock.isHeldByCurrentThread()) pollLock.unlock();
+            pollLock.unlock();
         }
     }
 
