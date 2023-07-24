@@ -48,9 +48,9 @@ public class DefaultPriorityQueueTest {
         final TestMessage mediumMessage = new TestMessage(3, "message medium");
         final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
         final TestMessage highMessage = new TestMessage(5, "message high");
-        final TestMessage urgentMessage = new TestMessage(6, "message urgetn");
-        defaultPriorityQueue.offer(lowestMessage, Priority.LOW);
+        final TestMessage urgentMessage = new TestMessage(6, "message urgent");
         defaultPriorityQueue.offer(lowMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOW);
         defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
         defaultPriorityQueue.offer(defaultPriority);
         defaultPriorityQueue.offer(highMessage, Priority.HIGH);
@@ -63,6 +63,45 @@ public class DefaultPriorityQueueTest {
                 () -> assertEquals(lowMessage, defaultPriorityQueue.poll().get(), "low should be 5th"),
                 () -> assertEquals(lowestMessage, defaultPriorityQueue.poll().get(), "lowest should be last")
         );
+    }
+
+    @DisplayName("when messages with priorities are put onto an empty queue then all messages should be included in the count")
+    @Test
+    void whenMessagesWithPrioritiesArePutOntoAnEmptyQueueThenAllMessagesShouldBeIncludedInTheCount() {
+        final TestMessage lowestMessage = new TestMessage(1, "message lowest");
+        final TestMessage lowMessage = new TestMessage(2, "message low");
+        final TestMessage mediumMessage = new TestMessage(3, "message medium");
+        final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
+        final TestMessage highMessage = new TestMessage(5, "message high");
+        final TestMessage urgentMessage = new TestMessage(6, "message urgent");
+        defaultPriorityQueue.offer(lowMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOW);
+        defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
+        defaultPriorityQueue.offer(defaultPriority);
+        defaultPriorityQueue.offer(highMessage, Priority.HIGH);
+        defaultPriorityQueue.offer(urgentMessage, Priority.URGENT);
+        assertEquals(6, defaultPriorityQueue.depth(), "message count is incorrect");
+    }
+
+    @DisplayName("when messages with priorities are put onto an empty queue and then purged then then the count should be 0 and poll result is empty optional")
+    @Test
+    void whenMessagesWithPrioritiesArePutOntoAnEmptyQueueAndThenPurgedThenThenTheCountShouldBe0AndPollResultIsEmptyOptional() {
+        final TestMessage lowestMessage = new TestMessage(1, "message lowest");
+        final TestMessage lowMessage = new TestMessage(2, "message low");
+        final TestMessage mediumMessage = new TestMessage(3, "message medium");
+        final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
+        final TestMessage highMessage = new TestMessage(5, "message high");
+        final TestMessage urgentMessage = new TestMessage(6, "message urgent");
+        defaultPriorityQueue.offer(lowMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOW);
+        defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
+        defaultPriorityQueue.offer(defaultPriority);
+        defaultPriorityQueue.offer(highMessage, Priority.HIGH);
+        defaultPriorityQueue.offer(urgentMessage, Priority.URGENT);
+        defaultPriorityQueue.purge();
+        assertAll("Verify purge was successful",
+                () -> assertEquals(0, defaultPriorityQueue.depth(), "message count is incorrect"),
+                () -> assertTrue(defaultPriorityQueue.poll().isEmpty(), "poll result should be empty"));
     }
 
 }

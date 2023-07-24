@@ -26,4 +26,5 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
     Optional<M> poll(long waitTimeout);
     Optional<M> peek();
     void purge();
+    long depth();
 }

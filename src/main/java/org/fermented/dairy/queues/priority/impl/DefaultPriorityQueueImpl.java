@@ -95,6 +95,13 @@ public final class DefaultPriorityQueueImpl<M> implements DefaultPriorityQueue<M
 
     @Override
     public void purge() {
+        ORDERED_PRIORITIES.stream().map(priorityQueueMap::get).forEach(Queue::clear);
+    }
 
+    @Override
+    public long depth() {
+        return ORDERED_PRIORITIES.stream().map(priorityQueueMap::get)
+                .map(Queue::size)
+                .mapToInt(Integer::intValue).sum();
     }
 }
