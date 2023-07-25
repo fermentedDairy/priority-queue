@@ -146,7 +146,7 @@ class DefaultPriorityQueueTest {
 
     @DisplayName("when the queue is full then put throws after timeout")
     @Test
-    void whenTheQueueIsFullThenPutThrowsAfterTimeout(){
+    void whenTheQueueIsFullThenPutThrowsAfterTimeout() {
         defaultPriorityQueue = PriorityQueue.getQueue(
                 Map.of(
                         MAX_PUT_WAIT_TIME_PROPERTY, 1000L,
