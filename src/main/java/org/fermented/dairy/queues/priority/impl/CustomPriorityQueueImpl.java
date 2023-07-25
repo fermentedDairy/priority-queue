@@ -20,7 +20,9 @@ import org.fermented.dairy.queues.priority.QueuePutException;
  * @param <M> The type of objects placed on the queue.
  * @param <P> The priority type
  */
-public class CustomPriorityQueueImpl<M, P extends Comparable<P>> implements PriorityQueue<M, P> {
+public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implements PriorityQueue<M, P>
+        permits DefaultPriorityQueueImpl,
+        IntegerRangePriorityQueueImpl {
     private static final long DEFAULT_MAX_QUEUE_DEPTH = 50000L;
     private static final long DEFAULT_PUT_BLOCK_TIMEOUT_MS = 0L;
     private static final long DEFAULT_POLL_WAIT_TIMEOUT_MS = 100L;
@@ -65,6 +67,7 @@ public class CustomPriorityQueueImpl<M, P extends Comparable<P>> implements Prio
 
     @Override
     public void offer(final M message, final P priority) {
+
         if (!priorityQueueMap.containsKey(priority)) {
             throw new QueuePutException("%s is not in the priority set", priority);
         }
