@@ -12,7 +12,7 @@ import org.fermented.dairy.queues.priority.QueueInstantiationException;
  *
  * @param <M> The type of objects placed on the queue.
  */
-public class IntegerRangePriorityQueueImpl<M> extends CustomPriorityQueueImpl<M, Integer>
+public final class IntegerRangePriorityQueueImpl<M> extends CustomPriorityQueueImpl<M, Integer>
         implements IntergerRangePriorityQueue<M> {
     public IntegerRangePriorityQueueImpl(final Map<String, Object> properties,
                                          final Integer minPriority,
