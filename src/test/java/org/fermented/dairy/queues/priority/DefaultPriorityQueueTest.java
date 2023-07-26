@@ -153,7 +153,6 @@ class DefaultPriorityQueueTest {
                         MAX_QUEUE_DEPTH_PROPERTY, 5L
                         )
         );
-
         final TestMessage lowestMessage = new TestMessage(1, "message lowest");
         final TestMessage lowMessage = new TestMessage(2, "message low");
         final TestMessage mediumMessage = new TestMessage(3, "message medium");
@@ -166,6 +165,6 @@ class DefaultPriorityQueueTest {
         defaultPriorityQueue.offer(defaultPriority);
         defaultPriorityQueue.offer(highMessage, Priority.HIGH);
         final QueuePutException exception = assertThrows(QueuePutException.class, () -> defaultPriorityQueue.offer(urgentMessage, Priority.URGENT));
-        assertEquals("Put failed within timeout, max queue depth exceeded", exception.getMessage());
+        assertEquals("Put failed after timeout, max queue depth exceeded", exception.getMessage());
     }
 }

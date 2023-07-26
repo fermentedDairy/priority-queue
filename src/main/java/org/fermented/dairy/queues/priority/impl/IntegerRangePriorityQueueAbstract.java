@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.fermented.dairy.queues.priority.AbstractPriorityQueue;
 import org.fermented.dairy.queues.priority.IntergerRangePriorityQueue;
 import org.fermented.dairy.queues.priority.QueueInstantiationException;
 
@@ -12,19 +13,19 @@ import org.fermented.dairy.queues.priority.QueueInstantiationException;
  *
  * @param <M> The type of objects placed on the queue.
  */
-public final class IntegerRangePriorityQueueImpl<M> extends CustomPriorityQueueImpl<M, Integer>
+public final class IntegerRangePriorityQueueAbstract<M> extends AbstractPriorityQueue<M, Integer>
         implements IntergerRangePriorityQueue<M> {
-    public IntegerRangePriorityQueueImpl(final Map<String, Object> properties,
-                                         final Integer minPriority,
-                                         final Integer maxPriority) {
+    public IntegerRangePriorityQueueAbstract(final Map<String, Object> properties,
+                                             final Integer minPriority,
+                                             final Integer maxPriority) {
 
         super(properties, getBoundedIntegerSet(minPriority, maxPriority));
     }
 
-    public IntegerRangePriorityQueueImpl(final Map<String, Object> properties,
-                                         final Integer minPriority,
-                                         final Integer maxPriority,
-                                         final Integer defaultPriority) {
+    public IntegerRangePriorityQueueAbstract(final Map<String, Object> properties,
+                                             final Integer minPriority,
+                                             final Integer maxPriority,
+                                             final Integer defaultPriority) {
         super(properties, getBoundedIntegerSet(minPriority, maxPriority), defaultPriority);
     }
 

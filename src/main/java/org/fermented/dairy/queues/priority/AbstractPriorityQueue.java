@@ -1,6 +1,8 @@
-package org.fermented.dairy.queues.priority.impl;
+package org.fermented.dairy.queues.priority;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -9,10 +11,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import org.fermented.dairy.queues.priority.PriorityQueue;
-import org.fermented.dairy.queues.priority.QueuePutException;
 
 /**
  * Implementation of the PriorityQueue that uses a custom set of priorities.
@@ -20,9 +18,7 @@ import org.fermented.dairy.queues.priority.QueuePutException;
  * @param <M> The type of objects placed on the queue.
  * @param <P> The priority type
  */
-public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implements PriorityQueue<M, P>
-        permits DefaultPriorityQueueImpl,
-        IntegerRangePriorityQueueImpl {
+public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implements PriorityQueue<M, P> {
     private static final long DEFAULT_MAX_QUEUE_DEPTH = 50000L;
     private static final long DEFAULT_PUT_BLOCK_TIMEOUT_MS = 0L;
     private static final long DEFAULT_POLL_WAIT_TIMEOUT_MS = 100L;
@@ -39,8 +35,9 @@ public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implemen
     private final long pollWaitTimeout;
 
     private final ReentrantLock pollLock = new ReentrantLock();
+    private final ReentrantLock putLock = new ReentrantLock();
 
-    public CustomPriorityQueueImpl(final Map<String, Object> properties, final Set<P> prioritySet) {
+    protected AbstractPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet) {
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
@@ -49,7 +46,7 @@ public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implemen
         this.defaultPriority = orderedPriorities.get(orderedPriorities.size() / 2);
     }
 
-    public CustomPriorityQueueImpl(final Map<String, Object> properties, final Set<P> prioritySet, final P defaultPriority) {
+    protected AbstractPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet, final P defaultPriority) {
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
@@ -59,14 +56,30 @@ public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implemen
     }
 
     private Map<P, Queue<M>> createPriorityQueueMap(final Set<P> prioritySet) {
-        return prioritySet.stream().collect(Collectors.toMap(
-                Function.identity(),
-                p -> new LinkedList<>()
-        ));
+        final Map<P, Queue<M>> map = new HashMap<>(prioritySet.size(), 1); //We shouldn't need to rehash
+        prioritySet.forEach(priority -> map.put(priority, new LinkedList<>()));
+        return Collections.unmodifiableMap(map);
     }
 
     @Override
     public void offer(final M message, final P priority) {
+        try {
+            final long startWaitTime = System.currentTimeMillis(); //start the clock before trying to get the lock
+            if (!putLock.isHeldByCurrentThread() && !putLock.tryLock(putBlockTimeout, TimeUnit.MILLISECONDS)) {
+                throw new QueuePutException("Could not gain the lock on poll within the timeout period");
+            }
+            while (maxQueueDepth <= depth()) {
+                if (System.currentTimeMillis() - startWaitTime >=  putBlockTimeout) {
+                    throw new QueuePutException("Put failed after timeout, max queue depth exceeded");
+                }
+            }
+        } catch (final InterruptedException e) { //NOSONAR: java:S2142, Throwing wrapped exception
+            throw new QueuePutException("Could not gain the lock on poll", e);
+        } finally {
+            if (putLock.isHeldByCurrentThread()) {
+                putLock.unlock();
+            }
+        }
 
         if (!priorityQueueMap.containsKey(priority)) {
             throw new QueuePutException("%s is not in the priority set", priority);
@@ -91,19 +104,20 @@ public sealed class CustomPriorityQueueImpl<M, P extends Comparable<P>> implemen
 
     @Override
     public Optional<M> poll(final long waitTimeout) {
-        boolean isLocked = false;
         try {
-            isLocked = pollLock.tryLock(waitTimeout, TimeUnit.MILLISECONDS);
+            if (!pollLock.isHeldByCurrentThread() && !pollLock.tryLock(waitTimeout, TimeUnit.MILLISECONDS)) {
+                throw new QueuePollException("Could not gain the lock on poll within the timeout");
+            }
 
             return orderedPriorities.stream()
                     .filter(
                             priority -> !priorityQueueMap.get(priority).isEmpty()
                     ).findFirst()
                     .map(priority -> priorityQueueMap.get(priority).poll());
-        } catch (final InterruptedException e) { //NOSONAR: java:S1068, Throwing wrapped exception
-            throw new QueuePutException("could not gain the lock on put within the timeout", e);
+        } catch (final InterruptedException e) { //NOSONAR: java:S2142, Throwing wrapped exception
+            throw new QueuePollException("Could not gain the lock on poll", e);
         } finally {
-            if (isLocked || pollLock.isHeldByCurrentThread()) {
+            if (pollLock.isHeldByCurrentThread()) {
                 pollLock.unlock();
             }
         }
