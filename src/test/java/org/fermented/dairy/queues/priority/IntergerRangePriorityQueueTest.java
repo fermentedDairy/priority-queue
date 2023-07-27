@@ -12,7 +12,7 @@ class IntergerRangePriorityQueueTest {
 
     @BeforeEach
     void createQueue() {
-        priorityQueue = PriorityQueue.getIntegerQueue();
+        priorityQueue = PriorityQueue.getQueue(0, 4);
     }
 
     @DisplayName("when messages without any priority are put onto an empty queue then it should be polled in the order they were put")
