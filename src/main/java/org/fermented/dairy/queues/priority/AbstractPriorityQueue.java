@@ -1,13 +1,9 @@
 package org.fermented.dairy.queues.priority;
 
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,12 +45,6 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
         this.prioritySet = prioritySet;
         this.defaultPriority = defaultPriority;
-    }
-
-    private Map<P, Queue<M>> createPriorityQueueMap(final Set<P> prioritySet) {
-        final Map<P, Queue<M>> map = new HashMap<>(prioritySet.size(), 1); //We shouldn't need to rehash
-        prioritySet.forEach(priority -> map.put(priority, new LinkedList<>()));
-        return Collections.unmodifiableMap(map);
     }
 
     @Override
