@@ -80,7 +80,6 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
             }
         }
 
-
         offerMessage(message, priority);
     }
 

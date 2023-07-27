@@ -40,7 +40,7 @@ public final class IntegerRangePriorityQueue<M> extends AbstractPriorityQueue<M,
     @Override
     protected void offerMessage(final M message, final Integer priority) {
         final int queueIndex = priority - minPriority;
-
+        queues[queueIndex].offer(message);
     }
 
     @Override
