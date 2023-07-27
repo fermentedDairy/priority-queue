@@ -2,8 +2,10 @@ package org.fermented.dairy.queues.priority;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+
 import org.fermented.dairy.queues.priority.impl.DefaultPriorityQueueAbstract;
-import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueueAbstract;
+import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueue;
 
 public interface PriorityQueue<M, P extends Comparable<P>> {
 
@@ -19,12 +21,12 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
         return new DefaultPriorityQueueAbstract<>(properties);
     }
 
-    static <T> IntergerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, Integer max, Integer min) {
-        return new IntegerRangePriorityQueueAbstract<>(properties, max, min);
+    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, Integer max, Integer min) {
+        return new IntegerRangePriorityQueue<>(properties, max, min);
     }
 
-    static <T> IntergerRangePriorityQueue<T> getIntegerQueue() {
-        return new IntegerRangePriorityQueueAbstract<>(Map.of(), 0, 4, 2);
+    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getIntegerQueue() {
+        return new IntegerRangePriorityQueue<>(Map.of(), 0, 4, 2);
     }
 
     void offer(M message, P priority);

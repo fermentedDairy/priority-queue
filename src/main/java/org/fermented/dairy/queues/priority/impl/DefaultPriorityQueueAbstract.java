@@ -3,6 +3,8 @@ package org.fermented.dairy.queues.priority.impl;
 import static org.fermented.dairy.queues.priority.Priority.MEDIUM;
 
 import java.util.Map;
+import java.util.Optional;
+
 import org.fermented.dairy.queues.priority.AbstractPriorityQueue;
 import org.fermented.dairy.queues.priority.DefaultPriorityQueue;
 import org.fermented.dairy.queues.priority.Priority;
@@ -18,5 +20,30 @@ public final class DefaultPriorityQueueAbstract<M>
 
     public DefaultPriorityQueueAbstract(final Map<String, Object> properties) {
         super(properties, Priority.asSet(), MEDIUM);
+    }
+
+    @Override
+    protected void offerMessage(final M message, final Priority priority) {
+
+    }
+
+    @Override
+    protected Optional<M> pollMessage() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<M> peek() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void purge() {
+
+    }
+
+    @Override
+    public long depth() {
+        return 0;
     }
 }
