@@ -20,12 +20,16 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
         return new DefaultPriorityQueue<>(properties);
     }
 
-    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, Integer max, Integer min) {
+    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, final int max, final int min) {
         return new IntegerRangePriorityQueue<>(properties, max, min);
     }
 
-    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getIntegerQueue() {
-        return new IntegerRangePriorityQueue<>(Map.of(), 0, 4, 2);
+    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final int max, final int min) {
+        return new IntegerRangePriorityQueue<>(Map.of(), max, min);
+    }
+
+    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final int max, final int min, final int defaultPriority) {
+        return new IntegerRangePriorityQueue<>(Map.of(), max, min, defaultPriority);
     }
 
     void offer(M message, P priority);
