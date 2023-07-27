@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class IntergerRangePriorityQueueTest {
 
-    IntergerRangePriorityQueue<TestMessage> priorityQueue;
+    IntegerRangePriorityQueue<TestMessage> priorityQueue;
 
     @BeforeEach
     void createQueue() {

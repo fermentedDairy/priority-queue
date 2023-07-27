@@ -23,10 +23,7 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
     private static final long DEFAULT_PUT_BLOCK_TIMEOUT_MS = 0L;
     private static final long DEFAULT_POLL_WAIT_TIMEOUT_MS = 100L;
 
-
-    private final List<P> orderedPriorities;
-
-    private final Map<P, Queue<M>> priorityQueueMap;
+    private final Set<P> prioritySet;
 
     private final P defaultPriority;
 
@@ -41,8 +38,8 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
-        this.priorityQueueMap = createPriorityQueueMap(prioritySet);
-        this.orderedPriorities = prioritySet.stream().sorted(Comparator.reverseOrder()).toList();
+        this.prioritySet = prioritySet;
+        final List<P> orderedPriorities = prioritySet.stream().sorted(Comparator.reverseOrder()).toList();
         this.defaultPriority = orderedPriorities.get(orderedPriorities.size() / 2);
     }
 
@@ -50,8 +47,7 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
-        this.priorityQueueMap = createPriorityQueueMap(prioritySet);
-        this.orderedPriorities = prioritySet.stream().sorted(Comparator.reverseOrder()).toList();
+        this.prioritySet = prioritySet;
         this.defaultPriority = defaultPriority;
     }
 
@@ -63,6 +59,9 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
 
     @Override
     public void offer(final M message, final P priority) {
+        if (!prioritySet.contains(priority)) {
+            throw new QueuePutException("%s is not in the priority set", priority);
+        }
         try {
             final long startWaitTime = System.currentTimeMillis(); //start the clock before trying to get the lock
             if (!putLock.isHeldByCurrentThread() && !putLock.tryLock(putBlockTimeout, TimeUnit.MILLISECONDS)) {
@@ -81,11 +80,10 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
             }
         }
 
-        if (!priorityQueueMap.containsKey(priority)) {
-            throw new QueuePutException("%s is not in the priority set", priority);
-        }
-        priorityQueueMap.get(priority).offer(message);
+        offerMessage(message, priority);
     }
+
+    protected abstract void offerMessage(final M message, final P priority);
 
     @Override
     public void offer(final M message) {
@@ -109,11 +107,7 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
                 throw new QueuePollException("Could not gain the lock on poll within the timeout");
             }
 
-            return orderedPriorities.stream()
-                    .filter(
-                            priority -> !priorityQueueMap.get(priority).isEmpty()
-                    ).findFirst()
-                    .map(priority -> priorityQueueMap.get(priority).poll());
+            return pollMessage();
         } catch (final InterruptedException e) { //NOSONAR: java:S2142, Throwing wrapped exception
             throw new QueuePollException("Could not gain the lock on poll", e);
         } finally {
@@ -123,23 +117,5 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
         }
     }
 
-    @Override
-    public Optional<M> peek() {
-        return orderedPriorities.stream().map(priorityQueueMap::get)
-                .filter(queue -> !queue.isEmpty())
-                .map(Queue::peek)
-                .findFirst();
-    }
-
-    @Override
-    public void purge() {
-        orderedPriorities.stream().map(priorityQueueMap::get).forEach(Queue::clear);
-    }
-
-    @Override
-    public long depth() {
-        return orderedPriorities.stream().map(priorityQueueMap::get)
-                .map(Queue::size)
-                .mapToInt(Integer::intValue).sum();
-    }
+    protected abstract Optional<M> pollMessage();
 }

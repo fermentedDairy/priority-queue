@@ -5,5 +5,5 @@ package org.fermented.dairy.queues.priority;
  *
  * @param <M> The type of objects placed on the queue.
  */
-public interface IntergerRangePriorityQueue<M> extends PriorityQueue<M, Integer> {
+public interface IntegerRangePriorityQueue<M> extends PriorityQueue<M, Integer> {
 }
