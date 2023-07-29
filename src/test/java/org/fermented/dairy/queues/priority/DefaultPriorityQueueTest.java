@@ -12,10 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -181,7 +179,7 @@ class DefaultPriorityQueueTest {
 
     @DisplayName("when the queue is full and there is concurrent access then messages are polled in order")
     @Test
-    void whenTheQueueIsFullAndThereIsConcurrentAccessThenMessagesArePolledInOrder() throws ExecutionException, InterruptedException, TimeoutException {
+    void whenTheQueueIsFullAndThereIsConcurrentAccessThenMessagesArePolledInOrder() throws InterruptedException {
         defaultPriorityQueue = PriorityQueue.getQueue(
                 Map.of(
                         MAX_PUT_WAIT_TIME_PROPERTY, 1000L,

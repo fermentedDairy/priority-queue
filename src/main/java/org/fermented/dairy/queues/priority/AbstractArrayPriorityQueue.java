@@ -118,7 +118,7 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
     @Override
     public long depth() {
         long sum = 0;
-        for (Queue<M> queue: queues) {
+        for (Queue<M> queue : queues) {
             if (!queue.isEmpty()) {
                 sum += queue.size();
             }
@@ -128,7 +128,7 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
 
     @Override
     public void purge() {
-        for (Queue<M> queue: queues) {
+        for (Queue<M> queue : queues) {
             if (!queue.isEmpty()) {
                 queue.clear();
             }

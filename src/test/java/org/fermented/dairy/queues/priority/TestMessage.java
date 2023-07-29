@@ -1,5 +1,10 @@
 package org.fermented.dairy.queues.priority;
 
-/** @noinspection checkstyle:MissingJavadocType*/
+/**
+ * Test Message.
+ *
+ * @param id ID of the message
+ * @param message Message text
+ */
 public record TestMessage(int id, String message) {
 }

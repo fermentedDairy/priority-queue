@@ -5,6 +5,12 @@ import java.util.Optional;
 import org.fermented.dairy.queues.priority.impl.DefaultPriorityQueueImpl;
 import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueueImpl;
 
+/**
+ * Silly priority queue.
+ *
+ * @param <M> Message type
+ * @param <P> Priority type
+ */
 public interface PriorityQueue<M, P extends Comparable<P>> {
 
     String MAX_QUEUE_DEPTH_PROPERTY = "maxQueueDepth";
@@ -15,11 +21,11 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
         return new DefaultPriorityQueueImpl<>(Map.of());
     }
 
-    static <T> org.fermented.dairy.queues.priority.DefaultPriorityQueue<T> getQueue(final Map<String, Object> properties) {
+    static <T> DefaultPriorityQueue<T> getQueue(final Map<String, Object> properties) {
         return new DefaultPriorityQueueImpl<>(properties);
     }
 
-    static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, final int max, final int min) {
+    static <T> IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, final int max, final int min) {
         return new IntegerRangePriorityQueueImpl<>(properties, max, min);
     }
 
