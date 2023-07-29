@@ -1,9 +1,11 @@
 package org.fermented.dairy.queues.priority;
 
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <M> The type of objects placed on the queue.
  * @param <P> The priority type
  */
-public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implements PriorityQueue<M, P> {
+public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> implements PriorityQueue<M, P> {
     private static final long DEFAULT_MAX_QUEUE_DEPTH = 50000L;
     private static final long DEFAULT_PUT_BLOCK_TIMEOUT_MS = 0L;
     private static final long DEFAULT_POLL_WAIT_TIMEOUT_MS = 100L;
@@ -30,21 +32,25 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
     private final ReentrantLock pollLock = new ReentrantLock();
     private final ReentrantLock putLock = new ReentrantLock();
 
-    protected AbstractPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet) {
+    private final Queue<M>[] queues;
+
+    protected AbstractArrayPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet) {
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
         this.prioritySet = prioritySet;
         final List<P> orderedPriorities = prioritySet.stream().sorted(Comparator.reverseOrder()).toList();
         this.defaultPriority = orderedPriorities.get(orderedPriorities.size() / 2);
+        queues = createQueueArray(prioritySet);
     }
 
-    protected AbstractPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet, final P defaultPriority) {
+    protected AbstractArrayPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet, final P defaultPriority) {
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
         this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
         this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
         this.prioritySet = prioritySet;
         this.defaultPriority = defaultPriority;
+        queues = createQueueArray(prioritySet);
     }
 
     @Override
@@ -62,18 +68,17 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
                     throw new QueuePutException("Put failed after timeout, max queue depth exceeded");
                 }
             }
+            queues[getPriorityIndex(priority)].offer(message);
         } catch (final InterruptedException e) { //NOSONAR: java:S2142, Throwing wrapped exception
-            throw new QueuePutException("Could not gain the lock on poll", e);
+            throw new QueuePutException("Could not gain the lock on offer", e);
         } finally {
             if (putLock.isHeldByCurrentThread()) {
                 putLock.unlock();
             }
         }
-
-        offerMessage(message, priority);
     }
 
-    protected abstract void offerMessage(final M message, final P priority);
+    public abstract int getPriorityIndex(final P priority);
 
     @Override
     public void offer(final M message) {
@@ -107,5 +112,54 @@ public abstract class AbstractPriorityQueue<M, P extends Comparable<P>> implemen
         }
     }
 
-    protected abstract Optional<M> pollMessage();
+    @Override
+    public long depth() {
+        long sum = 0;
+        for (int i = queues.length - 1; i >= 0; i--) {
+            final Queue<M> queue = queues[i];
+            if (!queue.isEmpty()) {
+                sum += queue.size();
+            }
+        }
+        return sum;
+    }
+
+    @Override
+    public void purge() {
+        for (int i = queues.length - 1; i >= 0; i--) {
+            final Queue<M> queue = queues[i];
+            if (!queue.isEmpty()) {
+                queue.clear();
+            }
+        }
+    }
+
+    private Optional<M> pollMessage() {
+        for (int i = queues.length - 1; i >= 0; i--) {
+            final Queue<M> queue = queues[i];
+            if (!queue.isEmpty()) {
+                return Optional.of(queue.poll());
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static <M, P> Queue<M>[] createQueueArray(Set<P> prioritySet) {
+        @SuppressWarnings("unchecked") final Queue<M>[] queueArray = new Queue[prioritySet.size()];
+        for (int i = 0; i < Priority.values().length; i++) {
+            queueArray[i] = new LinkedList<>();
+        }
+        return queueArray;
+    }
+
+    @Override
+    public Optional<M> peek() {
+        for (int i = queues.length - 1; i >= 0; i--) {
+            final Queue<M> queue = queues[i];
+            if (!queue.isEmpty()) {
+                return Optional.of(queue.peek());
+            }
+        }
+        return Optional.empty();
+    }
 }

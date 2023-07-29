@@ -2,9 +2,8 @@ package org.fermented.dairy.queues.priority;
 
 import java.util.Map;
 import java.util.Optional;
-
-import org.fermented.dairy.queues.priority.impl.DefaultPriorityQueue;
-import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueue;
+import org.fermented.dairy.queues.priority.impl.DefaultPriorityQueueImpl;
+import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueueImpl;
 
 public interface PriorityQueue<M, P extends Comparable<P>> {
 
@@ -13,23 +12,23 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
     String MAX_PUT_WAIT_TIME_PROPERTY = "maxPutWaitTime";
 
     static <T> org.fermented.dairy.queues.priority.DefaultPriorityQueue<T> getQueue() {
-        return new DefaultPriorityQueue<>(Map.of());
+        return new DefaultPriorityQueueImpl<>(Map.of());
     }
 
     static <T> org.fermented.dairy.queues.priority.DefaultPriorityQueue<T> getQueue(final Map<String, Object> properties) {
-        return new DefaultPriorityQueue<>(properties);
+        return new DefaultPriorityQueueImpl<>(properties);
     }
 
     static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final Map<String, Object> properties, final int max, final int min) {
-        return new IntegerRangePriorityQueue<>(properties, max, min);
+        return new IntegerRangePriorityQueueImpl<>(properties, max, min);
     }
 
     static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final int max, final int min) {
-        return new IntegerRangePriorityQueue<>(Map.of(), max, min);
+        return new IntegerRangePriorityQueueImpl<>(Map.of(), max, min);
     }
 
     static <T> org.fermented.dairy.queues.priority.IntegerRangePriorityQueue<T> getQueue(final int max, final int min, final int defaultPriority) {
-        return new IntegerRangePriorityQueue<>(Map.of(), max, min, defaultPriority);
+        return new IntegerRangePriorityQueueImpl<>(Map.of(), max, min, defaultPriority);
     }
 
     void offer(M message, P priority);
