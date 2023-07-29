@@ -53,18 +53,22 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
         queues = createQueueArray(prioritySet);
     }
 
+    public abstract int getPriorityIndex(final P priority);
+
     @Override
     public void offer(final M message, final P priority) {
         if (!prioritySet.contains(priority)) {
             throw new QueuePutException("%s is not in the priority set", priority);
         }
         try {
+
             final long startWaitTime = System.currentTimeMillis(); //start the clock before trying to get the lock
-            if (!putLock.isHeldByCurrentThread() && !putLock.tryLock(putBlockTimeout, TimeUnit.MILLISECONDS)) {
+            if (!putLock.isHeldByCurrentThread()
+                    && !putLock.tryLock(putBlockTimeout, TimeUnit.MILLISECONDS)) {
                 throw new QueuePutException("Could not gain the lock on poll within the timeout period");
             }
             while (maxQueueDepth <= depth()) {
-                if (System.currentTimeMillis() - startWaitTime >=  putBlockTimeout) {
+                if (System.currentTimeMillis() - startWaitTime >= putBlockTimeout) {
                     throw new QueuePutException("Put failed after timeout, max queue depth exceeded");
                 }
             }
@@ -78,7 +82,6 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
         }
     }
 
-    public abstract int getPriorityIndex(final P priority);
 
     @Override
     public void offer(final M message) {
@@ -115,8 +118,7 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
     @Override
     public long depth() {
         long sum = 0;
-        for (int i = queues.length - 1; i >= 0; i--) {
-            final Queue<M> queue = queues[i];
+        for (Queue<M> queue: queues) {
             if (!queue.isEmpty()) {
                 sum += queue.size();
             }
@@ -126,30 +128,11 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
 
     @Override
     public void purge() {
-        for (int i = queues.length - 1; i >= 0; i--) {
-            final Queue<M> queue = queues[i];
+        for (Queue<M> queue: queues) {
             if (!queue.isEmpty()) {
                 queue.clear();
             }
         }
-    }
-
-    private Optional<M> pollMessage() {
-        for (int i = queues.length - 1; i >= 0; i--) {
-            final Queue<M> queue = queues[i];
-            if (!queue.isEmpty()) {
-                return Optional.of(queue.poll());
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static <M, P> Queue<M>[] createQueueArray(Set<P> prioritySet) {
-        @SuppressWarnings("unchecked") final Queue<M>[] queueArray = new Queue[prioritySet.size()];
-        for (int i = 0; i < Priority.values().length; i++) {
-            queueArray[i] = new LinkedList<>();
-        }
-        return queueArray;
     }
 
     @Override
@@ -158,6 +141,34 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
             final Queue<M> queue = queues[i];
             if (!queue.isEmpty()) {
                 return Optional.of(queue.peek());
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for (Queue<M> queue : queues) {
+            if (!queue.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static <M, P> Queue<M>[] createQueueArray(final Set<P> prioritySet) {
+        @SuppressWarnings("unchecked") final Queue<M>[] queueArray = new Queue[prioritySet.size()];
+        for (int i = 0; i < Priority.values().length; i++) {
+            queueArray[i] = new LinkedList<>();
+        }
+        return queueArray;
+    }
+
+    private Optional<M> pollMessage() {
+        for (int i = queues.length - 1; i >= 0; i--) {
+            final Queue<M> queue = queues[i];
+            if (!queue.isEmpty()) {
+                return Optional.of(queue.poll());
             }
         }
         return Optional.empty();

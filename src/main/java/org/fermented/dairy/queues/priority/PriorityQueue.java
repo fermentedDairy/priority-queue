@@ -46,4 +46,6 @@ public interface PriorityQueue<M, P extends Comparable<P>> {
     void purge();
 
     long depth();
+
+    boolean isEmpty();
 }

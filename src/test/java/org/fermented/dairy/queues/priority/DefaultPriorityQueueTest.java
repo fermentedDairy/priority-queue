@@ -4,10 +4,18 @@ import static org.fermented.dairy.queues.priority.PriorityQueue.MAX_PUT_WAIT_TIM
 import static org.fermented.dairy.queues.priority.PriorityQueue.MAX_QUEUE_DEPTH_PROPERTY;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,7 +91,9 @@ class DefaultPriorityQueueTest {
         defaultPriorityQueue.offer(defaultPriority);
         defaultPriorityQueue.offer(highMessage, Priority.HIGH);
         defaultPriorityQueue.offer(urgentMessage, Priority.URGENT);
-        assertEquals(6, defaultPriorityQueue.depth(), "message count is incorrect");
+        assertAll("Validate queue condition",
+                () -> assertEquals(6, defaultPriorityQueue.depth(), "message count is incorrect"),
+                () -> assertFalse(defaultPriorityQueue.isEmpty(), "queue should not be empty"));
     }
 
     @DisplayName("when messages with priorities are put onto an empty queue and then purged, the count should be 0 and poll result is empty optional")
@@ -105,7 +115,8 @@ class DefaultPriorityQueueTest {
         defaultPriorityQueue.purge();
         assertAll("Verify purge was successful",
                 () -> assertEquals(0, defaultPriorityQueue.depth(), "message count is incorrect"),
-                () -> assertTrue(defaultPriorityQueue.poll().isEmpty(), "poll result should be empty"));
+                () -> assertTrue(defaultPriorityQueue.poll().isEmpty(), "poll result should be empty"),
+                () -> assertTrue(defaultPriorityQueue.isEmpty(), "queue should be empty"));
     }
 
     @DisplayName("when messages with priorities are put onto an empty queue and then peek should return next deilvered message")
@@ -166,5 +177,61 @@ class DefaultPriorityQueueTest {
         defaultPriorityQueue.offer(highMessage, Priority.HIGH);
         final QueuePutException exception = assertThrows(QueuePutException.class, () -> defaultPriorityQueue.offer(urgentMessage, Priority.URGENT));
         assertEquals("Put failed after timeout, max queue depth exceeded", exception.getMessage());
+    }
+
+    @DisplayName("when the queue is full and there is concurrent access then messages are polled in order")
+    @Test
+    void whenTheQueueIsFullAndThereIsConcurrentAccessThenMessagesArePolledInOrder() throws ExecutionException, InterruptedException, TimeoutException {
+        defaultPriorityQueue = PriorityQueue.getQueue(
+                Map.of(
+                        MAX_PUT_WAIT_TIME_PROPERTY, 1000L,
+                        MAX_QUEUE_DEPTH_PROPERTY, 5L
+                )
+        );
+        final TestMessage lowestMessage = new TestMessage(1, "message lowest");
+        final TestMessage lowMessage = new TestMessage(2, "message low");
+        final TestMessage mediumMessage = new TestMessage(3, "message medium");
+        final TestMessage defaultPriority = new TestMessage(4, "message medium as default");
+        final TestMessage highMessage = new TestMessage(5, "message high");
+        final TestMessage urgentMessage1 = new TestMessage(6, "message urgent 1");
+        final TestMessage urgentMessage2 = new TestMessage(7, "message urgent 2");
+        defaultPriorityQueue.offer(lowMessage, Priority.LOW);
+        defaultPriorityQueue.offer(lowestMessage, Priority.LOWEST);
+        defaultPriorityQueue.offer(mediumMessage, Priority.MEDIUM);
+        defaultPriorityQueue.offer(defaultPriority);
+        defaultPriorityQueue.offer(highMessage, Priority.HIGH);
+
+        //noinspection resource
+        final Future<Boolean> futureResult1 = Executors.newFixedThreadPool(2).submit(() -> {
+            defaultPriorityQueue.offer(urgentMessage1, Priority.URGENT);
+            return true;
+        });
+
+        //noinspection resource
+        final Future<Boolean> futureResult2 = Executors.newFixedThreadPool(2).submit(() -> {
+            defaultPriorityQueue.offer(urgentMessage2, Priority.URGENT);
+            return true;
+        });
+
+        final List<TestMessage> messageList = new LinkedList<>();
+
+        while (!defaultPriorityQueue.isEmpty()) {
+            final Optional<TestMessage> optMessage;
+            if ((optMessage = defaultPriorityQueue.poll()).isPresent()) {
+                messageList.add(optMessage.get());
+            }
+            Thread.sleep(1L); //NOSONAR java:S2925: Give the offering thread time to actually offer
+        }
+
+        final List<TestMessage> expectedMessageList = List.of(
+                highMessage, //High must be polled before urgent 1 can be offered
+                urgentMessage1, //Urgent 1 being polled means urgent 2 can be offered
+                urgentMessage2,
+                mediumMessage, //All the others in usual priority order
+                defaultPriority,
+                lowMessage,
+                lowestMessage
+        );
+        assertEquals(expectedMessageList, messageList, "Messages are missing or in the wrong order");
     }
 }
