@@ -1,4 +1,4 @@
-package org.fermented.dairy.queues.priority;
+package org.fermented.dairy.queues.priority.exceptions;
 
 /**
  * Exception thrown during the queue instantiation phase.

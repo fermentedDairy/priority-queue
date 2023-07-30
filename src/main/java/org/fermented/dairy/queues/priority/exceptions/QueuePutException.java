@@ -1,4 +1,4 @@
-package org.fermented.dairy.queues.priority;
+package org.fermented.dairy.queues.priority.exceptions;
 
 /**
  * Runtime Exception thrown when queue put operation fails.

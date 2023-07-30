@@ -1,4 +1,4 @@
-package org.fermented.dairy.queues.priority;
+package org.fermented.dairy.queues.priority.exceptions;
 
 /**
  * Parent exception for all exceptions thrown by the queue implementations.

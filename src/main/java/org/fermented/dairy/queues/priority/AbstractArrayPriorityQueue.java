@@ -9,6 +9,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import org.fermented.dairy.queues.priority.exceptions.QueuePollException;
+import org.fermented.dairy.queues.priority.exceptions.QueuePutException;
 
 /**
  * Implementation of the PriorityQueue that uses a custom set of priorities.

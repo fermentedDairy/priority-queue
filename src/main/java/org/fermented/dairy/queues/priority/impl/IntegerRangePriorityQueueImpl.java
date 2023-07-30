@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.fermented.dairy.queues.priority.AbstractArrayPriorityQueue;
-import org.fermented.dairy.queues.priority.QueueInstantiationException;
+import org.fermented.dairy.queues.priority.exceptions.QueueInstantiationException;
 
 /**
  * PriorityQueue implementation using {@link Integer} as the priority.
