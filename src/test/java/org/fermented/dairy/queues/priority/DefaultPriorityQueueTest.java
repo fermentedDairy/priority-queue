@@ -212,13 +212,12 @@ class DefaultPriorityQueueTest {
         });
 
         final List<TestMessage> messageList = new LinkedList<>();
-
         while (!defaultPriorityQueue.isEmpty()) {
             final Optional<TestMessage> optMessage;
             if ((optMessage = defaultPriorityQueue.poll()).isPresent()) {
                 messageList.add(optMessage.get());
             }
-            Thread.sleep(1L); //NOSONAR java:S2925: Give the offering thread time to actually offer
+            Thread.sleep(5L); //NOSONAR java:S2925: Give the offering thread time to actually offer
         }
 
         final List<TestMessage> expectedMessageList = List.of(

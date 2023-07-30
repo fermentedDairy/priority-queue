@@ -11,7 +11,7 @@ import org.fermented.dairy.queues.priority.impl.IntegerRangePriorityQueueImpl;
  * @param <M> Message type
  * @param <P> Priority type
  */
-public interface PriorityQueue<M, P extends Comparable<P>> {
+public interface PriorityQueue<M, P> {
 
     String MAX_QUEUE_DEPTH_PROPERTY = "maxQueueDepth";
     String MAX_POLL_WAIT_TIME_PROPERTY = "maxPollWaitTime";
