@@ -20,7 +20,7 @@ public final class IntegerRangePriorityQueueImpl<M> extends AbstractArrayPriorit
     public IntegerRangePriorityQueueImpl(final Map<String, Object> properties,
                                          final Integer minPriority,
                                          final Integer maxPriority) {
-        super(properties, getBoundedIntegerSet(minPriority, maxPriority));
+        super(properties, getBoundedIntegerSet(minPriority, maxPriority), (minPriority + maxPriority) / 2);
         this.minPriority = minPriority;
     }
 

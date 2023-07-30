@@ -1,8 +1,6 @@
 package org.fermented.dairy.queues.priority;
 
-import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -18,7 +16,7 @@ import org.fermented.dairy.queues.priority.exceptions.QueuePutException;
  * @param <M> The type of objects placed on the queue.
  * @param <P> The priority type
  */
-public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> implements PriorityQueue<M, P> {
+public abstract class AbstractArrayPriorityQueue<M, P> implements PriorityQueue<M, P> {
     private static final long DEFAULT_MAX_QUEUE_DEPTH = 50000L;
     private static final long DEFAULT_PUT_BLOCK_TIMEOUT_MS = 0L;
     private static final long DEFAULT_POLL_WAIT_TIMEOUT_MS = 100L;
@@ -35,16 +33,6 @@ public abstract class AbstractArrayPriorityQueue<M, P extends Comparable<P>> imp
     private final ReentrantLock putLock = new ReentrantLock();
 
     private final Queue<M>[] queues;
-
-    protected AbstractArrayPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet) {
-        this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
-        this.putBlockTimeout = (long) properties.getOrDefault(MAX_PUT_WAIT_TIME_PROPERTY, DEFAULT_PUT_BLOCK_TIMEOUT_MS);
-        this.pollWaitTimeout = (long) properties.getOrDefault(MAX_POLL_WAIT_TIME_PROPERTY, DEFAULT_POLL_WAIT_TIMEOUT_MS);
-        this.prioritySet = prioritySet;
-        final List<P> orderedPriorities = prioritySet.stream().sorted(Comparator.reverseOrder()).toList();
-        this.defaultPriority = orderedPriorities.get(orderedPriorities.size() / 2);
-        queues = createQueueArray(prioritySet);
-    }
 
     protected AbstractArrayPriorityQueue(final Map<String, Object> properties, final Set<P> prioritySet, final P defaultPriority) {
         this.maxQueueDepth = (long) properties.getOrDefault(MAX_QUEUE_DEPTH_PROPERTY, DEFAULT_MAX_QUEUE_DEPTH);
